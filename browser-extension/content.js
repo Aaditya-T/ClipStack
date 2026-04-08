@@ -195,8 +195,7 @@
       showToast('Copied!');
       setTimeout(() => hideOverlay(), 600);
     }).catch(() => {
-      showToast('Copied!');
-      setTimeout(() => hideOverlay(), 600);
+      showToast('Could not copy — try again');
     });
   }
 

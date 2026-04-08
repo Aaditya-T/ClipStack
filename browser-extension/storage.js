@@ -96,7 +96,11 @@ async function togglePin(id) {
   if (!item) return;
   item.pinned = !item.pinned;
   const pinned = items.filter(i => i.pinned);
-  const nonPinned = items.filter(i => !i.pinned);
+  let nonPinned = items.filter(i => !i.pinned);
+  // Enforce cap after unpinning (item moved to non-pinned pool may push it over limit)
+  if (nonPinned.length > MAX_HISTORY) {
+    nonPinned = nonPinned.slice(0, MAX_HISTORY);
+  }
   await saveHistory([...pinned, ...nonPinned]);
   return item;
 }

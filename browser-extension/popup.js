@@ -150,7 +150,7 @@ function copyItem(item) {
   navigator.clipboard.writeText(item.text).then(() => {
     showToast('Copied!');
   }).catch(() => {
-    showToast('Copied!');
+    showToast('Could not copy — try again');
   });
 }
 
