@@ -44,6 +44,19 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Replit workspace infrastructure
 .cache/
 .local/
+replit.md
+.replit
+.upm/
+artifacts/
+lib/
+scripts/
+pnpm-workspace.yaml
+pnpm-lock.yaml
+tsconfig.base.json
+
+# Extension dev utilities (icon generation scripts, not needed in published repo)
+browser-extension/make-icons.mjs
+browser-extension/generate-icons.js
