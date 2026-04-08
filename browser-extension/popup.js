@@ -2,6 +2,7 @@ let allItems = [];
 let searchQuery = '';
 let focusedIndex = -1;
 let toastTimer = null;
+let lastItemsHash = '';
 
 const pinnedList = document.getElementById('pinnedList');
 const historyList = document.getElementById('historyList');
@@ -85,9 +86,8 @@ function buildItem(item, isPinned) {
     </div>
     <div class="item-actions">
       <button class="action-btn pin-btn ${item.pinned ? 'active' : ''}" title="${item.pinned ? 'Unpin' : 'Pin'}">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="${item.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3" fill="${item.pinned ? 'white' : 'none'}" stroke="${item.pinned ? 'none' : 'currentColor'}"/>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" opacity="${item.pinned ? '1' : '0.45'}">
+          <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
         </svg>
       </button>
       <button class="action-btn sensitive-btn ${item.sensitive ? 'active' : ''}" title="${item.sensitive ? 'Unmask' : 'Mask (sensitive)'}">
@@ -198,7 +198,11 @@ function render(items) {
 
 async function loadHistory() {
   chrome.runtime.sendMessage({ type: 'GET_HISTORY' }, (items) => {
-    allItems = items || [];
+    const fresh = items || [];
+    const hash = JSON.stringify(fresh);
+    if (hash === lastItemsHash) return;
+    lastItemsHash = hash;
+    allItems = fresh;
     render(allItems);
   });
 }

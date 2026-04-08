@@ -4,8 +4,33 @@
   if (window.__clipstackInjected) return;
   window.__clipstackInjected = true;
 
-  // ─── Clipboard capture via copy event ───────────────────────────────────────
+  // ─── Intercept programmatic clipboard.writeText() calls ─────────────────────
+  // Inject into MAIN world so we can patch navigator.clipboard before page code runs
+  function injectClipboardInterceptor() {
+    const script = document.createElement('script');
+    script.textContent = `(function() {
+      try {
+        const orig = navigator.clipboard.writeText.bind(navigator.clipboard);
+        navigator.clipboard.writeText = function(text) {
+          window.postMessage({ __clipstack__: true, text: String(text) }, '*');
+          return orig(text);
+        };
+      } catch(e) {}
+    })();`;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
+  }
+  injectClipboardInterceptor();
 
+  // Listen for messages from the injected page script
+  window.addEventListener('message', (e) => {
+    if (e.source !== window) return;
+    if (e.data && e.data.__clipstack__ && typeof e.data.text === 'string' && e.data.text.trim()) {
+      chrome.runtime.sendMessage({ type: 'ADD_ENTRY', text: e.data.text });
+    }
+  });
+
+  // ─── Clipboard capture via copy event (Ctrl+C and right-click copy) ─────────
   document.addEventListener('copy', () => {
     // Slight delay so the clipboard is populated
     setTimeout(() => {
@@ -144,9 +169,8 @@
       </div>
       <div class="cs-actions">
         <button class="cs-act cs-act-pin ${item.pinned ? 'active' : ''}" title="${item.pinned ? 'Unpin' : 'Pin'}">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="${item.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" opacity="${item.pinned ? '1' : '0.45'}">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
           </svg>
         </button>
         <button class="cs-act cs-act-eye ${item.sensitive ? 'active' : ''}" title="${item.sensitive ? 'Unmask' : 'Mask (sensitive)'}">
