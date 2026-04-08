@@ -4,25 +4,9 @@
   if (window.__clipstackInjected) return;
   window.__clipstackInjected = true;
 
-  // ─── Intercept programmatic clipboard.writeText() calls ─────────────────────
-  // Inject into MAIN world so we can patch navigator.clipboard before page code runs
-  function injectClipboardInterceptor() {
-    const script = document.createElement('script');
-    script.textContent = `(function() {
-      try {
-        const orig = navigator.clipboard.writeText.bind(navigator.clipboard);
-        navigator.clipboard.writeText = function(text) {
-          window.postMessage({ __clipstack__: true, text: String(text) }, '*');
-          return orig(text);
-        };
-      } catch(e) {}
-    })();`;
-    (document.head || document.documentElement).appendChild(script);
-    script.remove();
-  }
-  injectClipboardInterceptor();
-
-  // Listen for messages from the injected page script
+  // ─── Receive programmatic clipboard.writeText() intercepts ──────────────────
+  // The background service worker injects a CSP-bypassing patcher into the MAIN
+  // world. That patcher uses window.postMessage to reach this isolated world.
   window.addEventListener('message', (e) => {
     if (e.source !== window) return;
     if (e.data && e.data.__clipstack__ && typeof e.data.text === 'string' && e.data.text.trim()) {
