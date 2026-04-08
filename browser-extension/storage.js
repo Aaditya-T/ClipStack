@@ -45,15 +45,19 @@ async function addEntry(text) {
   if (existing) {
     existing.copyCount = (existing.copyCount || 1) + 1;
     existing.timestamp = Date.now();
+    if (existing.pinned) {
+      // Pinned items stay where they are — just update in place
+      await saveHistory(items);
+      return existing;
+    }
+    // Non-pinned: move to the top of the non-pinned section
     const idx = items.indexOf(existing);
     items.splice(idx, 1);
-    if (!existing.pinned) {
-      const firstNonPinned = items.findIndex(i => !i.pinned);
-      if (firstNonPinned === -1) {
-        items.push(existing);
-      } else {
-        items.splice(firstNonPinned, 0, existing);
-      }
+    const firstNonPinned = items.findIndex(i => !i.pinned);
+    if (firstNonPinned === -1) {
+      items.push(existing);
+    } else {
+      items.splice(firstNonPinned, 0, existing);
     }
     await saveHistory(items);
     return existing;
